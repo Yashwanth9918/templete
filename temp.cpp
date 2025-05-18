@@ -15,7 +15,7 @@ private:
     }
 
     int query(int index, int low, int high, int left, int right) const {
-        // No overlap
+        // No overlap 
         if (right < low || high < left) return INT_MAX;
 
         // Complete overlap
