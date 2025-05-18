@@ -1,44 +1,58 @@
-class sgtree {
-public:
-    vector<int> seg;
-    sgtree(int n) {
-        seg.resize(4 * n + 1);
-    }
+class SegmentTree {
+private:
+    vector<int> tree;
+    int n;
 
-    void build(int ind, int low, int high, int arr[]) {
+    void build(int index, int low, int high, const vector<int>& arr) {
         if (low == high) {
-            seg[ind] = arr[low];
+            tree[index] = arr[low];
             return;
         }
+        int mid = (low + high) / 2;
+        build(2 * index + 1, low, mid, arr);
+        build(2 * index + 2, mid + 1, high, arr);
+        tree[index] = min(tree[2 * index + 1], tree[2 * index + 2]);
+    }
+
+    int query(int index, int low, int high, int left, int right) const {
+        // No overlap
+        if (right < low || high < left) return INT_MAX;
+
+        // Complete overlap
+        if (left <= low && high <= right) return tree[index];
 
         int mid = (low + high) / 2;
-        build(2 * ind + 1, low, mid, arr);
-        build(2 * ind + 2, mid + 1, high, arr);
-        seg[ind] = min(seg[2 * ind + 1], seg[2 * ind + 2]);
+        int lQuery = query(2 * index + 1, low, mid, left, right);
+        int rQuery = query(2 * index + 2, mid + 1, high, left, right);
+        return min(lQuery, rQuery);
     }
 
-    int query(int ind, int low, int high, int l, int r) {
-        // no overlap
-        // l r low high or low high l r
-        if (r < low || high < l) return INT_MAX;
-
-        // complete overlap
-        // [l low high r]
-        if (low >= l && high <= r) return seg[ind];
-
-        int mid = (low + high) >> 1;
-        int left = query(2 * ind + 1, low, mid, l, r);
-        int right = query(2 * ind + 2, mid + 1, high, l, r);
-        return min(left, right);
-    }
-    void update(int ind, int low, int high, int i, int val) {
+    void update(int index, int low, int high, int pos, int value) {
         if (low == high) {
-            seg[ind] = val;
+            tree[index] = value;
             return;
         }
-        int mid = (low + high) >> 1;
-        if (i <= mid) update(2 * ind + 1, low, mid, i, val);
-        else update(2 * ind + 2, mid + 1, high, i, val);
-        seg[ind] = min(seg[2 * ind + 1], seg[2 * ind + 2]);
+        int mid = (low + high) / 2;
+        if (pos <= mid)
+            update(2 * index + 1, low, mid, pos, value);
+        else
+            update(2 * index + 2, mid + 1, high, pos, value);
+
+        tree[index] = min(tree[2 * index + 1], tree[2 * index + 2]);
+    }
+
+public:
+    SegmentTree(const vector<int>& arr) {
+        n = arr.size();
+        tree.resize(4 * n);
+        build(0, 0, n - 1, arr);
+    }
+
+    int query(int left, int right) const {
+        return query(0, 0, n - 1, left, right);
+    }
+
+    void update(int pos, int value) {
+        update(0, 0, n - 1, pos, value);
     }
 };
